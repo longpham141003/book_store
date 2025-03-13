@@ -15,7 +15,7 @@ class RentalOrderSeeder extends Seeder
      */
     public function run()
     {
-        $user = User::first(); // Lấy người dùng đầu tiên
+        $user = User::first(); 
 
         RentalOrder::create([
             'user_id' => $user->id,

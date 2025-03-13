@@ -15,7 +15,7 @@ class BookSeeder extends Seeder
      */
     public function run()
     {
-        $category = Category::first(); // Lấy danh mục đầu tiên
+        $category = Category::first(); 
 
         Book::create([
             'title' => 'Sách 1',

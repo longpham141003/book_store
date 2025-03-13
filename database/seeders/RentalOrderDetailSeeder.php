@@ -16,8 +16,8 @@ class RentalOrderDetailSeeder extends Seeder
      */
     public function run()
     {
-        $order = RentalOrder::first(); // Lấy đơn thuê đầu tiên
-        $book = Book::first(); // Lấy sách đầu tiên
+        $order = RentalOrder::first(); 
+        $book = Book::first(); 
 
         RentalOrderDetail::create([
             'rental_order_id' => $order->id,
