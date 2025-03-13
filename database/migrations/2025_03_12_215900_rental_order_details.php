@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('rental_order_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rental_order_id')->constrained()->onDelete('cascade'); // Khóa ngoại đến bảng rental_orders
-            $table->foreignId('book_id')->constrained()->onDelete('cascade'); // Khóa ngoại đến bảng books
-            $table->integer('quantity'); // Số lượng sách thuê
-            $table->decimal('rental_price', 8, 2); // Giá thuê mỗi cuốn sách
-            $table->decimal('deposit_amount', 8, 2); // Tiền cọc
-            $table->decimal('deposit_kept', 8, 2); // Tiền cọc đã giữ
+            $table->foreignId('rental_order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('book_id')->constrained()->onDelete('cascade');
+            $table->integer('quantity');
+            $table->decimal('rental_price', 8, 2);
+            $table->decimal('deposit_amount', 8, 2);
+            $table->decimal('deposit_kept', 8, 2);
             $table->timestamps();
         });
     }
