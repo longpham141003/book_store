@@ -5,39 +5,100 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BookRequests\StoreBookRequest;
 use App\Http\Requests\BookRequests\UpdateBookRequest;
 use App\Repositories\Interface\BookRepository;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class BookController extends Controller
 {
     protected BookRepository $bookRepo;
 
-    public function __construct(\App\Repositories\Interface\BookRepository $bookRepo)
+    public function __construct(BookRepository $bookRepo)
     {
         $this->bookRepo = $bookRepo;
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
-        $books = $this->bookRepo->all();
-        return response()->json($books);
+        try {
+            $books = $this->bookRepo->all();
+            return response()->json($books);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể lấy danh sách sách',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function store(StoreBookRequest $request)
+    public function store(StoreBookRequest $request): JsonResponse
     {
-        $book = $this->bookRepo->create($request->validated());
-        return response()->json($book, 201);
+        try {
+            $book = $this->bookRepo->create($request->validated());
+            return response()->json($book, 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Dữ liệu đầu vào không hợp lệ',
+                'message' => $e->getMessage(),
+                'details' => $e->errors(),
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể tạo sách',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-
-    public function update(UpdateBookRequest $request, $id)
+    public function update(UpdateBookRequest $request, $id): JsonResponse
     {
-        $book = $this->bookRepo->update($request->validated(), $id);
-        return response()->json($book);
+        try {
+            $book = $this->bookRepo->update($request->validated(), $id);
+
+            if (!$book) {
+                return response()->json([
+                    'error' => 'Sách không tồn tại'
+                ], 404);
+            }
+
+            return response()->json($book);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Dữ liệu đầu vào không hợp lệ',
+                'message' => $e->getMessage(),
+                'details' => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Sách không tìm thấy',
+                'message' => 'Không tìm thấy sách với ID đã chỉ định.',
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể cập nhật sách',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
-        $this->bookRepo->delete($id);
-        return response()->json(null, 204);
+        try {
+            $deleted = $this->bookRepo->delete($id);
+
+            if (!$deleted) {
+                return response()->json([
+                    'error' => 'Sách không tồn tại'
+                ], 404);
+            }
+
+            return response()->json(null, 204);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể xóa sách',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

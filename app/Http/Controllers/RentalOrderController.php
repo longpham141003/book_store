@@ -8,6 +8,10 @@ use App\Repositories\Interface\RentalOrderRepository;
 use App\Services\RentalOrderService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class RentalOrderController extends Controller
 {
@@ -20,52 +24,115 @@ class RentalOrderController extends Controller
         $this->rentalOrderRepo = $rentalOrderRepo;
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
-        $orders = $this->rentalOrderRepo->with(['user', 'rentalOrderDetails.book'])->all();
-        return RentalOrderResource::collection($orders);
+        try {
+            $orders = $this->rentalOrderRepo->with(['user', 'rentalOrderDetails.book'])->all();
+            return RentalOrderResource::collection($orders);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể lấy danh sách đơn thuê',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function store(RentalOrderRequest $request)
+    public function store(RentalOrderRequest $request): JsonResponse
     {
-        $order = $this->rentalOrderService->createOrder($request->validated());
-        return response()->json(['order' => $order ], 201);
+        try {
+            $order = $this->rentalOrderService->createOrder($request->validated());
+            return response()->json(['order' => $order], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Dữ liệu đầu vào không hợp lệ',
+                'message' => $e->getMessage(),
+                'details' => $e->errors(),
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể tạo đơn thuê',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function update(RentalOrderRequest $request, $id)
+    public function update(RentalOrderRequest $request, $id): JsonResponse
     {
-        $order = $this->rentalOrderService->updateOrder($id, $request->validated());
-        return response()->json($order);
+        try {
+            $order = $this->rentalOrderService->updateOrder($id, $request->validated());
+            return response()->json($order);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Đơn thuê không tồn tại',
+                'message' => 'Không tìm thấy đơn thuê với ID đã chỉ định.',
+            ], 404);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Dữ liệu đầu vào không hợp lệ',
+                'message' => $e->getMessage(),
+                'details' => $e->errors(),
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể cập nhật đơn thuê',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
-        $this->rentalOrderRepo->delete($id);
-        return response()->json(null, 204);
+        try {
+            $deleted = $this->rentalOrderRepo->delete($id);
+
+            if (!$deleted) {
+                return response()->json([
+                    'error' => 'Đơn thuê không tồn tại',
+                ], 404);
+            }
+
+            return response()->json(null, 204);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể xóa đơn thuê',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-
-    public function getOrdersByDate($date)
+    public function getOrdersByDate($date): JsonResponse
     {
-        $orders = $this->rentalOrderRepo->getOrdersByDate($date);
+        try {
+            $orders = $this->rentalOrderRepo->getOrdersByDate($date);
 
-        return response()->json([
-            'date' => $date,
-            'total_orders' => count($orders),
-            'orders' => RentalOrderResource::collection($orders),
-        ]);
+            return response()->json([
+                'date' => $date,
+                'total_orders' => count($orders),
+                'orders' => RentalOrderResource::collection($orders),
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể lấy đơn thuê theo ngày',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-
-    public function getOverdueOrders()
+    public function getOverdueOrders(): JsonResponse
     {
-        $today = now()->toDateString();
-        $overdueOrders = $this->rentalOrderRepo->getOverdueOrders($today);
+        try {
+            $today = now()->toDateString();
+            $overdueOrders = $this->rentalOrderRepo->getOverdueOrders($today);
 
-        return response()->json([
-            'total_overdue' => $overdueOrders->count(),
-            'overdue_orders' => RentalOrderResource::collection($overdueOrders),
-        ]);
+            return response()->json([
+                'total_overdue' => $overdueOrders->count(),
+                'overdue_orders' => RentalOrderResource::collection($overdueOrders),
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Không thể lấy đơn thuê quá hạn',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
-
 }
