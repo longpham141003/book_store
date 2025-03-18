@@ -29,6 +29,7 @@ class UpdateBookRequest extends FormRequest
             'rental_price' => 'sometimes|numeric',
             'stock' => 'sometimes|integer',
             'status' => 'sometimes|in:available,rented,lost,damaged',
+
         ];
     }
 }

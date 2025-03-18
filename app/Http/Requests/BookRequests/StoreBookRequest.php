@@ -27,7 +27,8 @@ class StoreBookRequest extends FormRequest
             'author' => 'required|string|max:255',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
-            'status' => 'required|in:available,rented,lost,damaged'
+            'status' => 'required|in:available,rented,lost,damaged',
+            'image_id' => 'nullable|exists:images,id',
         ];
     }
 }

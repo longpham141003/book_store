@@ -9,7 +9,7 @@ class Book extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'author', 'price', 'stock', 'category_id', 'status'];
+    protected $fillable = ['title', 'author', 'price', 'stock', 'category_id', 'status', 'image_id'];
 
     public function category()
     {
@@ -19,5 +19,10 @@ class Book extends Model
     public function rentalOrderDetails()
     {
         return $this->hasMany(RentalOrderDetail::class);
+    }
+
+    public function image()
+    {
+        return $this->belongsTo(Image::class);
     }
 }

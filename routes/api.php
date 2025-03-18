@@ -18,6 +18,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::apiResource('categories', CategoryController::class)->only(['store', 'update', 'destroy']);
     Route::get('/rental-orders/by-date/{date}', [\App\Http\Controllers\RentalOrderController::class, 'getOrdersByDate']);
     Route::get('/rental-orders/overdue', [\App\Http\Controllers\RentalOrderController::class, 'getOverdueOrders']);
+    Route::post('/upload', [\App\Http\Controllers\ImageController::class, 'upload']);
+
 });
 
 Route::middleware(['auth:sanctum', 'role:staff'])->group(function () {

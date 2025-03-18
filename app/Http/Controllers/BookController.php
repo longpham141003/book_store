@@ -35,7 +35,15 @@ class BookController extends Controller
     public function store(StoreBookRequest $request): JsonResponse
     {
         try {
-            $book = $this->bookRepo->create($request->validated());
+            $bookData = $request->validated();
+
+            // Nếu có ảnh, lưu ảnh trước rồi lấy ID
+            if ($request->hasFile('image')) {
+                $image = $this->imageRepo->uploadImage($request->file('image'));
+                $bookData['image_id'] = $image->id;
+            }
+
+            $book = $this->bookRepo->create($bookData);
             return response()->json($book, 201);
         } catch (ValidationException $e) {
             return response()->json([
